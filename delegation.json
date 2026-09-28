@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "mspOfferName": {
+      "type": "string",
+      "defaultValue": "SecOps — Sentinel read access"
+    },
+    "mspOfferDescription": {
+      "type": "string",
+      "defaultValue": "Lets Evalian SecOps read your Microsoft Sentinel data and raise incidents in Sentinel when you report one from the portal."
+    },
+    "managedByTenantId": {
+      "type": "string",
+      "defaultValue": "770efa30-4160-4959-95ae-53298070a3a6"
+    },
+    "authorizations": {
+      "type": "array",
+      "defaultValue": [
+        {
+          "principalId": "3ad07035-3ee4-4c4c-a8e8-0e5194150666",
+          "roleDefinitionId": "73c42c96-874c-492b-b04d-ab87d138a893",
+          "principalIdDisplayName": "SecOps Sentinel Reader"
+        },
+        {
+          "principalId": "3ad07035-3ee4-4c4c-a8e8-0e5194150666",
+          "roleDefinitionId": "3e150937-b8fe-4cfb-8069-0eaf05ecd056",
+          "principalIdDisplayName": "SecOps Sentinel Responder"
+        }
+      ]
+    }
+  },
+  "variables": {
+    "mspRegistrationName": "[guid(parameters('mspOfferName'))]",
+    "mspAssignmentName": "[guid(parameters('mspOfferName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ManagedServices/registrationDefinitions",
+      "apiVersion": "2019-06-01",
+      "name": "[variables('mspRegistrationName')]",
+      "properties": {
+        "registrationDefinitionName": "[parameters('mspOfferName')]",
+        "description": "[parameters('mspOfferDescription')]",
+        "managedByTenantId": "[parameters('managedByTenantId')]",
+        "authorizations": "[parameters('authorizations')]"
+      }
+    },
+    {
+      "type": "Microsoft.ManagedServices/registrationAssignments",
+      "apiVersion": "2019-06-01",
+      "name": "[variables('mspAssignmentName')]",
+      "dependsOn": [
+        "[extensionResourceId(subscription().id, 'Microsoft.ManagedServices/registrationDefinitions', variables('mspRegistrationName'))]"
+      ],
+      "properties": {
+        "registrationDefinitionId": "[extensionResourceId(subscription().id, 'Microsoft.ManagedServices/registrationDefinitions', variables('mspRegistrationName'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "mspOfferName": {
+      "type": "string",
+      "value": "[concat('Managed by ', parameters('mspOfferName'))]"
+    },
+    "authorizations": {
+      "type": "array",
+      "value": "[parameters('authorizations')]"
+    }
+  }
+}
